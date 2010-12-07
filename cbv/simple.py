@@ -6,8 +6,8 @@ from django.template import loader, RequestContext
 
 
 warnings.warn(
-    'Function-based generic views have been deprecated; use class-based views
-    instead.', PendingDeprecationWarning
+    'Function-based generic views have been deprecated; use class-based views '
+    'instead.', PendingDeprecationWarning
 )
 
 
@@ -58,7 +58,10 @@ def redirect_to(request, url, permanent=True, query_string=False, **kwargs):
         url = "%s?%s" % (url, args)
 
     if url is not None:
-        klass = permanent and HttpResponsePermanentRedirect or HttpResponseRedirect
+        if permanent:
+            klass = HttpResponsePermanentRedirect
+        else:
+            klass = HttpResponseRedirect
         return klass(url % kwargs)
     else:
         logger.warning('Gone: %s' % request.path,
