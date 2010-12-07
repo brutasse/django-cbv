@@ -31,7 +31,6 @@ setup(
     ],
     packages=[
         'cbv',
-        'cbv.template',
     ],
     platforms='any',
     # we don't want eggs
