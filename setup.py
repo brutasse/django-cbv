@@ -12,7 +12,7 @@ fp.close()
 
 setup(
     name='django-cbv',
-    version='0.1',
+    version='0.1.1',
     url='https://github.com/sorl/django-cbv',
     license='BSD',
     author='Mikko Hellsing',
@@ -31,6 +31,7 @@ setup(
     ],
     packages=[
         'cbv',
+        'cbv.template',
     ],
     platforms='any',
     # we don't want eggs
