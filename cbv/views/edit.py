@@ -1,5 +1,5 @@
 from cbv.views.base import TemplateResponseMixin, View
-from cbv.views.detail import BaseDetailView SingleObjectMixin
+from cbv.views.detail import BaseDetailView, SingleObjectMixin
 from cbv.views.detail import SingleObjectTemplateResponseMixin
 from django.core.exceptions import ImproperlyConfigured
 from django.forms import models as model_forms
