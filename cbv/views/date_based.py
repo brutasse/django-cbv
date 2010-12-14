@@ -1,11 +1,11 @@
 import datetime
 import time
 import warnings
-from django.template import loader, RequestContext
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.xheaders import populate_xheaders
 from django.db.models.fields import DateTimeField
 from django.http import Http404, HttpResponse
+from django.template import loader, RequestContext
 
 
 warnings.warn(
@@ -31,9 +31,8 @@ def archive_index(request, queryset, date_field, num_latest=15,
     if extra_context is None: extra_context = {}
     model = queryset.model
     if not allow_future:
-        queryset = queryset.filter(
-            **{'%s__lte' % date_field: datetime.datetime.now()}
-            )
+        params = {'%s__lte' % date_field: datetime.datetime.now()}
+        queryset = queryset.filter(**params)
     date_list = queryset.dates(date_field, 'year')[::-1]
     if not date_list and not allow_empty:
         raise Http404("No %s available" % model._meta.verbose_name)
@@ -45,7 +44,9 @@ def archive_index(request, queryset, date_field, num_latest=15,
 
     if not template_name:
         template_name = "%s/%s_archive.html" % (
-            model._meta.app_label, model._meta.object_name.lower())
+            model._meta.app_label,
+            model._meta.object_name.lower()
+            )
     t = template_loader.get_template(template_name)
     c = RequestContext(request, {
         'date_list' : date_list,
@@ -94,7 +95,9 @@ def archive_year(request, year, queryset, date_field, template_name=None,
         object_list = []
     if not template_name:
         template_name = "%s/%s_archive_year.html" % (
-            model._meta.app_label, model._meta.object_name.lower())
+            model._meta.app_label,
+            model._meta.object_name.lower()
+            )
     t = template_loader.get_template(template_name)
     c = RequestContext(request, {
         'date_list': date_list,
@@ -131,7 +134,9 @@ def archive_month(request, year, month, queryset, date_field,
     if extra_context is None: extra_context = {}
     try:
         tt = time.strptime(
-            "%s-%s" % (year, month), '%s-%s' % ('%Y', month_format))
+            "%s-%s" % (year, month),
+            '%s-%s' % ('%Y', month_format)
+            )
         date = datetime.date(*tt[:3])
     except ValueError:
         raise Http404
@@ -175,7 +180,9 @@ def archive_month(request, year, month, queryset, date_field,
 
     if not template_name:
         template_name = "%s/%s_archive_month.html" % (
-            model._meta.app_label, model._meta.object_name.lower())
+            model._meta.app_label,
+            model._meta.object_name.lower()
+            )
     t = template_loader.get_template(template_name)
     c = RequestContext(request, {
         'date_list': date_list,
@@ -232,7 +239,9 @@ def archive_week(request, year, week, queryset, date_field,
         raise Http404
     if not template_name:
         template_name = "%s/%s_archive_week.html" % (
-            model._meta.app_label, model._meta.object_name.lower())
+            model._meta.app_label,
+            model._meta.object_name.lower()
+            )
     t = template_loader.get_template(template_name)
     c = RequestContext(request, {
         '%s_list' % template_object_name: object_list,
@@ -276,10 +285,11 @@ def archive_day(request, year, month, day, queryset, date_field,
     now = datetime.datetime.now()
 
     if isinstance(model._meta.get_field(date_field), DateTimeField):
-        lookup_kwargs = {'%s__range' % date_field: (
+        date_range = (
             datetime.datetime.combine(date, datetime.time.min),
             datetime.datetime.combine(date, datetime.time.max)
-            )}
+            )
+        lookup_kwargs = {'%s__range' % date_field: date_range}
     else:
         lookup_kwargs = {date_field: date}
 
@@ -301,7 +311,9 @@ def archive_day(request, year, month, day, queryset, date_field,
 
     if not template_name:
         template_name = "%s/%s_archive_day.html" % (
-            model._meta.app_label, model._meta.object_name.lower())
+            model._meta.app_label,
+            model._meta.object_name.lower()
+            )
     t = template_loader.get_template(template_name)
     c = RequestContext(request, {
         '%s_list' % template_object_name: object_list,
@@ -353,10 +365,11 @@ def object_detail(request, year, month, day, queryset, date_field,
     now = datetime.datetime.now()
 
     if isinstance(model._meta.get_field(date_field), DateTimeField):
-        lookup_kwargs = {'%s__range' % date_field: (
+        date_range = (
             datetime.datetime.combine(date, datetime.time.min),
             datetime.datetime.combine(date, datetime.time.max)
-            )}
+            )
+        lookup_kwargs = {'%s__range' % date_field: date_range}
     else:
         lookup_kwargs = {date_field: date}
 
@@ -377,7 +390,9 @@ def object_detail(request, year, month, day, queryset, date_field,
         raise Http404("No %s found for" % model._meta.verbose_name)
     if not template_name:
         template_name = "%s/%s_detail.html" % (
-            model._meta.app_label, model._meta.object_name.lower())
+            model._meta.app_label,
+            model._meta.object_name.lower()
+            )
     if template_name_field:
         template_name_list = [getattr(obj, template_name_field), template_name]
         t = template_loader.select_template(template_name_list)

@@ -1,9 +1,9 @@
-
 class DeferredRenderingMiddleware(object):
+    """
+    Middleware that renders defferred rendered responses for Django < 1.3.
+    """
     def process_response(self, request, response):
         try:
-            # If the response supports deferred rendering, apply template
-            # response middleware and the render the response
             if hasattr(response, 'render') and callable(response.render):
                 return response.render()
             return response

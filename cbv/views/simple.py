@@ -40,8 +40,7 @@ def redirect_to(request, url, permanent=True, query_string=False, **kwargs):
     ``/foo/<id>/`` to ``/bar/<id>/``, you could use the following URLconf::
 
         urlpatterns = patterns('',
-            ('^foo/(?P<id>\d+)/$', 'cbv.simple.redirect_to',
-             {'url' : '/bar/%(id)s/'}),
+            ('^foo/(?P<id>\d+)/$', 'django.views.generic.simple.redirect_to', {'url' : '/bar/%(id)s/'}),
         )
 
     If the given url is ``None``, a HttpResponseGone (410) will be issued.
@@ -59,15 +58,13 @@ def redirect_to(request, url, permanent=True, query_string=False, **kwargs):
 
     if url is not None:
         if permanent:
-            klass = HttpResponsePermanentRedirect
-        else:
-            klass = HttpResponseRedirect
-        return klass(url % kwargs)
+            return HttpResponsePermanentRedirect(url % kwargs)
+        return HttpResponseRedirect(url % kwargs)
     else:
-        logger.warning('Gone: %s' % request.path,
-                    extra={
-                        'status_code': 410,
-                        'request': request
-                    })
+        logger.warning(
+            'Gone: %s' % request.path,
+            extra={
+                'status_code': 410,
+                'request': request
+            })
         return HttpResponseGone()
-

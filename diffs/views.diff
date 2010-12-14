@@ -1,0 +1,827 @@
+diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/base.py cbv/views/base.py
+--- ../django-trunk/django/views/generic/base.py	2010-12-14 10:13:07.019272001 +0100
++++ cbv/views/base.py	2010-12-14 00:07:21.959547002 +0100
+@@ -1,12 +1,21 @@
+-from django import http
++import logging
++from cbv.http import TemplateResponse
+ from django.core.exceptions import ImproperlyConfigured
++from django import http
+ from django.template import RequestContext, loader
+-from django.template.response import TemplateResponse
+ from django.utils.functional import update_wrapper
+-from django.utils.log import getLogger
+-from django.utils.decorators import classonlymethod
+ 
+-logger = getLogger('django.request')
++
++logger = logging.getLogger('cbv')
++
++
++class classonlymethod(classmethod):
++    def __get__(self, instance, owner):
++        if instance is not None:
++            raise AttributeError("This method is available only on the view "
++                                 "class.")
++        return super(classonlymethod, self).__get__(instance, owner)
++
+ 
+ class View(object):
+     """
+@@ -58,7 +67,8 @@
+         # defer to the error handler. Also defer to the error handler if the
+         # request method isn't on the approved list.
+         if request.method.lower() in self.http_method_names:
+-            handler = getattr(self, request.method.lower(), self.http_method_not_allowed)
++            handler = getattr(self, request.method.lower(),
++                              self.http_method_not_allowed)
+         else:
+             handler = self.http_method_not_allowed
+         self.request = request
+@@ -68,7 +78,8 @@
+ 
+     def http_method_not_allowed(self, request, *args, **kwargs):
+         allowed_methods = [m for m in self.http_method_names if hasattr(self, m)]
+-        logger.warning('Method Not Allowed (%s): %s' % (request.method, request.path),
++        logger.warning(
++            'Method Not Allowed (%s): %s' % (request.method, request.path),
+             extra={
+                 'status_code': 405,
+                 'request': self.request
+diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/create_update.py cbv/views/create_update.py
+--- ../django-trunk/django/views/generic/create_update.py	2010-11-12 11:05:17.000000000 +0100
++++ cbv/views/create_update.py	2010-12-14 00:07:21.949552002 +0100
+@@ -1,17 +1,18 @@
++import warnings
++from cbv import GenericViewError
++from django.contrib.auth.views import redirect_to_login
++from django.contrib import messages
++from django.core.exceptions import ObjectDoesNotExist, ImproperlyConfigured
++from django.core.xheaders import populate_xheaders
+ from django.forms.models import ModelFormMetaclass, ModelForm
+-from django.template import RequestContext, loader
+ from django.http import Http404, HttpResponse, HttpResponseRedirect
+-from django.core.xheaders import populate_xheaders
+-from django.core.exceptions import ObjectDoesNotExist, ImproperlyConfigured
++from django.template import RequestContext, loader
+ from django.utils.translation import ugettext
+-from django.contrib.auth.views import redirect_to_login
+-from django.views.generic import GenericViewError
+-from django.contrib import messages
+ 
+-import warnings
++
+ warnings.warn(
+-    'Function-based generic views have been deprecated; use class-based views instead.',
+-    PendingDeprecationWarning
++    'Function-based generic views have been deprecated; use class-based views '
++    'instead.', PendingDeprecationWarning
+ )
+ 
+ 
+@@ -45,8 +46,9 @@
+         # and passing in a temporary inner class.
+         class Meta:
+             model = tmp_model
+-        class_name = model.__name__ + 'Form'
+-        form_class = ModelFormMetaclass(class_name, (ModelForm,), {'Meta': Meta})
++        name = model.__name__ + 'Form'
++        attrs = {'Meta': Meta}
++        form_class = ModelFormMetaclass(name, (ModelForm,), attrs)
+         return model, form_class
+     raise GenericViewError("Generic view must be called with either a model or"
+                            " form_class argument.")
+@@ -127,7 +129,10 @@
+ 
+     # Create the template, context, response
+     if not template_name:
+-        template_name = "%s/%s_form.html" % (model._meta.app_label, model._meta.object_name.lower())
++        template_name = "%s/%s_form.html" % (
++            model._meta.app_label,
++            model._meta.object_name.lower()
++            )
+     t = template_loader.get_template(template_name)
+     c = RequestContext(request, {
+         'form': form,
+@@ -169,7 +174,10 @@
+         form = form_class(instance=obj)
+ 
+     if not template_name:
+-        template_name = "%s/%s_form.html" % (model._meta.app_label, model._meta.object_name.lower())
++        template_name = "%s/%s_form.html" % (
++            model._meta.app_label,
++            model._meta.object_name.lower()
++            )
+     t = template_loader.get_template(template_name)
+     c = RequestContext(request, {
+         'form': form,
+@@ -177,7 +185,8 @@
+     }, context_processors)
+     apply_extra_context(extra_context, c)
+     response = HttpResponse(t.render(c))
+-    populate_xheaders(request, response, model, getattr(obj, obj._meta.pk.attname))
++    populate_xheaders(request, response, model,
++                      getattr(obj, obj._meta.pk.attname))
+     return response
+ 
+ def delete_object(request, model, post_delete_redirect, object_id=None,
+@@ -210,12 +219,16 @@
+         return HttpResponseRedirect(post_delete_redirect)
+     else:
+         if not template_name:
+-            template_name = "%s/%s_confirm_delete.html" % (model._meta.app_label, model._meta.object_name.lower())
++            template_name = "%s/%s_confirm_delete.html" % (
++                model._meta.app_label,
++                model._meta.object_name.lower()
++                )
+         t = template_loader.get_template(template_name)
+         c = RequestContext(request, {
+             template_object_name: obj,
+         }, context_processors)
+         apply_extra_context(extra_context, c)
+         response = HttpResponse(t.render(c))
+-        populate_xheaders(request, response, model, getattr(obj, obj._meta.pk.attname))
++        populate_xheaders(request, response, model,
++                          getattr(obj, obj._meta.pk.attname))
+         return response
+diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/date_based.py cbv/views/date_based.py
+--- ../django-trunk/django/views/generic/date_based.py	2010-11-12 11:05:17.000000000 +0100
++++ cbv/views/date_based.py	2010-12-14 00:07:21.949552002 +0100
+@@ -1,16 +1,16 @@
+ import datetime
+ import time
+-
+-from django.template import loader, RequestContext
++import warnings
+ from django.core.exceptions import ObjectDoesNotExist
+ from django.core.xheaders import populate_xheaders
+ from django.db.models.fields import DateTimeField
+ from django.http import Http404, HttpResponse
++from django.template import loader, RequestContext
++
+ 
+-import warnings
+ warnings.warn(
+-    'Function-based generic views have been deprecated; use class-based views instead.',
+-    PendingDeprecationWarning
++    'Function-based generic views have been deprecated; use class-based views '
++    'instead.', PendingDeprecationWarning
+ )
+ 
+ 
+@@ -31,7 +31,8 @@
+     if extra_context is None: extra_context = {}
+     model = queryset.model
+     if not allow_future:
+-        queryset = queryset.filter(**{'%s__lte' % date_field: datetime.datetime.now()})
++        params = {'%s__lte' % date_field: datetime.datetime.now()}
++        queryset = queryset.filter(**params)
+     date_list = queryset.dates(date_field, 'year')[::-1]
+     if not date_list and not allow_empty:
+         raise Http404("No %s available" % model._meta.verbose_name)
+@@ -42,7 +43,10 @@
+         latest = None
+ 
+     if not template_name:
+-        template_name = "%s/%s_archive.html" % (model._meta.app_label, model._meta.object_name.lower())
++        template_name = "%s/%s_archive.html" % (
++            model._meta.app_label,
++            model._meta.object_name.lower()
++            )
+     t = template_loader.get_template(template_name)
+     c = RequestContext(request, {
+         'date_list' : date_list,
+@@ -78,7 +82,8 @@
+ 
+     lookup_kwargs = {'%s__year' % date_field: year}
+ 
+-    # Only bother to check current date if the year isn't in the past and future objects aren't requested.
++    # Only bother to check current date if the year isn't in the past and
++    # future objects aren't requested.
+     if int(year) >= now.year and not allow_future:
+         lookup_kwargs['%s__lte' % date_field] = now
+     date_list = queryset.filter(**lookup_kwargs).dates(date_field, 'month')
+@@ -89,7 +94,10 @@
+     else:
+         object_list = []
+     if not template_name:
+-        template_name = "%s/%s_archive_year.html" % (model._meta.app_label, model._meta.object_name.lower())
++        template_name = "%s/%s_archive_year.html" % (
++            model._meta.app_label,
++            model._meta.object_name.lower()
++            )
+     t = template_loader.get_template(template_name)
+     c = RequestContext(request, {
+         'date_list': date_list,
+@@ -125,7 +133,10 @@
+     """
+     if extra_context is None: extra_context = {}
+     try:
+-        tt = time.strptime("%s-%s" % (year, month), '%s-%s' % ('%Y', month_format))
++        tt = time.strptime(
++            "%s-%s" % (year, month),
++            '%s-%s' % ('%Y', month_format)
++            )
+         date = datetime.date(*tt[:3])
+     except ValueError:
+         raise Http404
+@@ -144,7 +155,8 @@
+         '%s__lt' % date_field: last_day,
+     }
+ 
+-    # Only bother to check current date if the month isn't in the past and future objects are requested.
++    # Only bother to check current date if the month isn't in the past and
++    # future objects are requested.
+     if last_day >= now.date() and not allow_future:
+         lookup_kwargs['%s__lte' % date_field] = now
+     object_list = queryset.filter(**lookup_kwargs)
+@@ -167,7 +179,10 @@
+         previous_month = first_day.replace(month=first_day.month-1)
+ 
+     if not template_name:
+-        template_name = "%s/%s_archive_month.html" % (model._meta.app_label, model._meta.object_name.lower())
++        template_name = "%s/%s_archive_month.html" % (
++            model._meta.app_label,
++            model._meta.object_name.lower()
++            )
+     t = template_loader.get_template(template_name)
+     c = RequestContext(request, {
+         'date_list': date_list,
+@@ -215,14 +230,18 @@
+         '%s__lt' % date_field: last_day,
+     }
+ 
+-    # Only bother to check current date if the week isn't in the past and future objects aren't requested.
++    # Only bother to check current date if the week isn't in the past and
++    # future objects aren't requested.
+     if last_day >= now.date() and not allow_future:
+         lookup_kwargs['%s__lte' % date_field] = now
+     object_list = queryset.filter(**lookup_kwargs)
+     if not object_list and not allow_empty:
+         raise Http404
+     if not template_name:
+-        template_name = "%s/%s_archive_week.html" % (model._meta.app_label, model._meta.object_name.lower())
++        template_name = "%s/%s_archive_week.html" % (
++            model._meta.app_label,
++            model._meta.object_name.lower()
++            )
+     t = template_loader.get_template(template_name)
+     c = RequestContext(request, {
+         '%s_list' % template_object_name: object_list,
+@@ -266,11 +285,16 @@
+     now = datetime.datetime.now()
+ 
+     if isinstance(model._meta.get_field(date_field), DateTimeField):
+-        lookup_kwargs = {'%s__range' % date_field: (datetime.datetime.combine(date, datetime.time.min), datetime.datetime.combine(date, datetime.time.max))}
++        date_range = (
++            datetime.datetime.combine(date, datetime.time.min),
++            datetime.datetime.combine(date, datetime.time.max)
++            )
++        lookup_kwargs = {'%s__range' % date_field: date_range}
+     else:
+         lookup_kwargs = {date_field: date}
+ 
+-    # Only bother to check current date if the date isn't in the past and future objects aren't requested.
++    # Only bother to check current date if the date isn't in the past and
++    # future objects aren't requested.
+     if date >= now.date() and not allow_future:
+         lookup_kwargs['%s__lte' % date_field] = now
+     object_list = queryset.filter(**lookup_kwargs)
+@@ -286,7 +310,10 @@
+         next_day = None
+ 
+     if not template_name:
+-        template_name = "%s/%s_archive_day.html" % (model._meta.app_label, model._meta.object_name.lower())
++        template_name = "%s/%s_archive_day.html" % (
++            model._meta.app_label,
++            model._meta.object_name.lower()
++            )
+     t = template_loader.get_template(template_name)
+     c = RequestContext(request, {
+         '%s_list' % template_object_name: object_list,
+@@ -338,11 +365,16 @@
+     now = datetime.datetime.now()
+ 
+     if isinstance(model._meta.get_field(date_field), DateTimeField):
+-        lookup_kwargs = {'%s__range' % date_field: (datetime.datetime.combine(date, datetime.time.min), datetime.datetime.combine(date, datetime.time.max))}
++        date_range = (
++            datetime.datetime.combine(date, datetime.time.min),
++            datetime.datetime.combine(date, datetime.time.max)
++            )
++        lookup_kwargs = {'%s__range' % date_field: date_range}
+     else:
+         lookup_kwargs = {date_field: date}
+ 
+-    # Only bother to check current date if the date isn't in the past and future objects aren't requested.
++    # Only bother to check current date if the date isn't in the past and
++    # future objects aren't requested.
+     if date >= now.date() and not allow_future:
+         lookup_kwargs['%s__lte' % date_field] = now
+     if object_id:
+@@ -350,13 +382,17 @@
+     elif slug and slug_field:
+         lookup_kwargs['%s__exact' % slug_field] = slug
+     else:
+-        raise AttributeError("Generic detail view must be called with either an object_id or a slug/slugfield")
++        raise AttributeError("Generic detail view must be called with either "
++                             "an object_id or a slug/slugfield")
+     try:
+         obj = queryset.get(**lookup_kwargs)
+     except ObjectDoesNotExist:
+         raise Http404("No %s found for" % model._meta.verbose_name)
+     if not template_name:
+-        template_name = "%s/%s_detail.html" % (model._meta.app_label, model._meta.object_name.lower())
++        template_name = "%s/%s_detail.html" % (
++            model._meta.app_label,
++            model._meta.object_name.lower()
++            )
+     if template_name_field:
+         template_name_list = [getattr(obj, template_name_field), template_name]
+         t = template_loader.select_template(template_name_list)
+diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/dates.py cbv/views/dates.py
+--- ../django-trunk/django/views/generic/dates.py	2010-11-28 00:31:46.000000000 +0100
++++ cbv/views/dates.py	2010-12-14 10:19:13.839272001 +0100
+@@ -1,11 +1,18 @@
+-import time
+ import datetime
+-from django.db import models
++import time
++from cbv.views.base import View
++from cbv.views.detail import BaseDetailView, SingleObjectTemplateResponseMixin
++from cbv.views.list import MultipleObjectMixin
++from cbv.views.list import MultipleObjectTemplateResponseMixin
+ from django.core.exceptions import ImproperlyConfigured
++from django.db import models
+ from django.http import Http404
+-from django.views.generic.base import View
+-from django.views.generic.detail import BaseDetailView, SingleObjectTemplateResponseMixin
+-from django.views.generic.list import MultipleObjectMixin, MultipleObjectTemplateResponseMixin
++
++
++__all__ =  (
++    'ArchiveIndexView', 'YearArchiveView', 'MonthArchiveView', 'WeekArchiveView',
++    'DayArchiveView', 'TodayArchiveView', 'DateDetailView'
++)
+ 
+ 
+ class YearMixin(object):
+@@ -63,7 +70,7 @@
+         """
+         first_day, last_day = _month_bounds(date)
+         next = (last_day + datetime.timedelta(days=1)).replace(day=1)
+-        return _get_next_prev_month(self, next, is_previous=False, use_first_day=True)
++        return _get_next_prev_month(self, next, False, True)
+ 
+     def get_previous_month(self, date):
+         """
+@@ -71,7 +78,7 @@
+         """
+         first_day, last_day = _month_bounds(date)
+         prev = (first_day - datetime.timedelta(days=1)).replace(day=1)
+-        return _get_next_prev_month(self, prev, is_previous=True, use_first_day=True)
++        return _get_next_prev_month(self, prev, True, True)
+ 
+ 
+ class DayMixin(object):
+@@ -103,14 +110,14 @@
+         Get the next valid day.
+         """
+         next = date + datetime.timedelta(days=1)
+-        return _get_next_prev_month(self, next, is_previous=False, use_first_day=False)
++        return _get_next_prev_month(self, next, False, False)
+ 
+     def get_previous_day(self, date):
+         """
+         Get the previous valid day.
+         """
+         prev = date - datetime.timedelta(days=1)
+-        return _get_next_prev_month(self, prev, is_previous=True, use_first_day=False)
++        return _get_next_prev_month(self, prev, True, False)
+ 
+ 
+ class WeekMixin(object):
+@@ -150,7 +157,8 @@
+         Get the name of the date field to be used to filter by.
+         """
+         if self.date_field is None:
+-            raise ImproperlyConfigured(u"%s.date_field is required." % self.__class__.__name__)
++            raise ImproperlyConfigured(u"%s.date_field is required." %
++                                       self.__class__.__name__)
+         return self.date_field
+ 
+     def get_allow_future(self):
+@@ -178,7 +186,8 @@
+         """
+         Obtain the list of dates and itesm
+         """
+-        raise NotImplementedError('A DateView must provide an implementation of get_dated_items()')
++        raise NotImplementedError('A DateView must provide an implementation '
++                                  'of get_dated_items()')
+ 
+     def get_dated_queryset(self, **lookup):
+         """
+@@ -194,7 +203,8 @@
+             qs = qs.filter(**{'%s__lte' % date_field: datetime.datetime.now()})
+ 
+         if not allow_empty and not qs:
+-            raise Http404(u"No %s available" % unicode(qs.model._meta.verbose_name_plural))
++            name = unicode(qs.model._meta.verbose_name_plural)
++            raise Http404(u"No %s available" % name)
+ 
+         return qs
+ 
+@@ -208,7 +218,8 @@
+ 
+         date_list = queryset.dates(date_field, date_type)[::-1]
+         if date_list is not None and not date_list and not allow_empty:
+-            raise Http404(u"No %s available" % unicode(qs.model._meta.verbose_name_plural))
++            name = unicode(qs.model._meta.verbose_name_plural)
++            raise Http404(u"No %s available" % name)
+ 
+         return date_list
+ 
+@@ -219,7 +230,8 @@
+         Get the context. Must return a Context (or subclass) instance.
+         """
+         items = kwargs.pop('object_list')
+-        context = super(BaseDateListView, self).get_context_data(object_list=items)
++        sup = super(BaseDateListView, self)
++        context = sup.get_context_data(object_list=items)
+         context.update(kwargs)
+         return context
+ 
+@@ -247,7 +259,8 @@
+         return (date_list, object_list, {})
+ 
+ 
+-class ArchiveIndexView(MultipleObjectTemplateResponseMixin, BaseArchiveIndexView):
++class ArchiveIndexView(MultipleObjectTemplateResponseMixin,
++                       BaseArchiveIndexView):
+     """
+     Top-level archive of date-based items.
+     """
+@@ -328,7 +341,8 @@
+ 
+ 
+ 
+-class MonthArchiveView(MultipleObjectTemplateResponseMixin, BaseMonthArchiveView):
++class MonthArchiveView(MultipleObjectTemplateResponseMixin,
++                       BaseMonthArchiveView):
+     """
+     List of objects published in a given year.
+     """
+@@ -436,14 +450,16 @@
+         return self._get_dated_items(datetime.date.today())
+ 
+ 
+-class TodayArchiveView(MultipleObjectTemplateResponseMixin, BaseTodayArchiveView):
++class TodayArchiveView(MultipleObjectTemplateResponseMixin,
++                       BaseTodayArchiveView):
+     """
+     List of objects published today.
+     """
+     template_name_suffix = "_archive_day"
+ 
+ 
+-class BaseDateDetailView(YearMixin, MonthMixin, DayMixin, DateMixin, BaseDetailView):
++class BaseDateDetailView(YearMixin, MonthMixin, DayMixin, DateMixin,
++                         BaseDetailView):
+     """
+     Detail view of a single object on a single date; this differs from the
+     standard DetailView by accepting a year/month/day in the URL.
+@@ -462,9 +478,10 @@
+         qs = self.get_queryset()
+ 
+         if not self.get_allow_future() and date > datetime.date.today():
+-            raise Http404("Future %s not available because %s.allow_future is False." % (
++            raise Http404(
++                "Future %s not available because %s.allow_future is False." % (
+                 qs.model._meta.verbose_name_plural, self.__class__.__name__)
+-            )
++                )
+ 
+         # Filter down a queryset from self.queryset using the date from the
+         # URL. This'll get passed as the queryset to DetailView.get_object,
+@@ -486,7 +503,8 @@
+     template_name_suffix = '_detail'
+ 
+ 
+-def _date_from_string(year, year_format, month, month_format, day='', day_format='', delim='__'):
++def _date_from_string(year, year_format, month, month_format, day='',
++                      day_format='', delim='__'):
+     """
+     Helper: get a datetime.date object given a format string and a year,
+     month, and possibly day; raise a 404 for an invalid date.
+@@ -496,7 +514,9 @@
+     try:
+         return datetime.date(*time.strptime(datestr, format)[:3])
+     except ValueError:
+-        raise Http404(u"Invalid date string '%s' given format '%s'" % (datestr, format))
++        raise Http404(
++            u"Invalid date string '%s' given format '%s'" % (datestr, format)
++            )
+ 
+ def _month_bounds(date):
+     """
+@@ -510,7 +530,8 @@
+ 
+     return first_day, last_day
+ 
+-def _get_next_prev_month(generic_view, naive_result, is_previous, use_first_day):
++def _get_next_prev_month(generic_view, naive_result, is_previous,
++                         use_first_day):
+     """
+     Helper: Get the next or the previous valid date. The idea is to allow
+     links on month/day views to never be 404s by never providing a date
+diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/detail.py cbv/views/detail.py
+--- ../django-trunk/django/views/generic/detail.py	2010-11-12 11:05:17.000000000 +0100
++++ cbv/views/detail.py	2010-12-14 10:19:22.659272001 +0100
+@@ -1,8 +1,7 @@
+ import re
+-
++from cbv.views.base import TemplateResponseMixin, View
+ from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
+ from django.http import Http404
+-from django.views.generic.base import TemplateResponseMixin, View
+ 
+ 
+ class SingleObjectMixin(object):
+@@ -59,11 +58,11 @@
+             if self.model:
+                 return self.model._default_manager.all()
+             else:
+-                raise ImproperlyConfigured(u"%(cls)s is missing a queryset. Define "
+-                                           u"%(cls)s.model, %(cls)s.queryset, or override "
+-                                           u"%(cls)s.get_object()." % {
+-                                                'cls': self.__class__.__name__
+-                                        })
++                raise ImproperlyConfigured(
++                    u"%(cls)s is missing a queryset. Define %(cls)s.model, "
++                    u"%(cls)s.queryset, or override %(cls)s.get_object()." % {
++                        'cls': self.__class__.__name__ }
++                    )
+         return self.queryset._clone()
+ 
+     def get_slug_field(self):
+@@ -108,7 +107,8 @@
+         Return a list of template names to be used for the request. Must return
+         a list. May not be called if get_template is overridden.
+         """
+-        names = super(SingleObjectTemplateResponseMixin, self).get_template_names()
++        sup = super(SingleObjectTemplateResponseMixin, self)
++        names = sup.get_template_names()
+ 
+         # If self.template_name_field is set, grab the value of the field
+         # of that name from the object; this is the most specific template
+diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/edit.py cbv/views/edit.py
+--- ../django-trunk/django/views/generic/edit.py	2010-12-14 10:13:07.019272001 +0100
++++ cbv/views/edit.py	2010-12-14 10:20:05.589272000 +0100
+@@ -1,9 +1,9 @@
+-from django.forms import models as model_forms
++from cbv.views.base import TemplateResponseMixin, View
++from cbv.views.detail import BaseDetailView SingleObjectMixin
++from cbv.views.detail import SingleObjectTemplateResponseMixin
+ from django.core.exceptions import ImproperlyConfigured
++from django.forms import models as model_forms
+ from django.http import HttpResponseRedirect
+-from django.views.generic.base import TemplateResponseMixin, View
+-from django.views.generic.detail import (SingleObjectMixin,
+-                        SingleObjectTemplateResponseMixin, BaseDetailView)
+ 
+ 
+ class FormMixin(object):
+diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/__init__.py cbv/views/__init__.py
+--- ../django-trunk/django/views/generic/__init__.py	2010-11-12 11:05:17.000000000 +0100
++++ cbv/views/__init__.py	2010-12-14 00:07:21.949552002 +0100
+@@ -1,12 +0,0 @@
+-from django.views.generic.base import View, TemplateView, RedirectView
+-from django.views.generic.dates import (ArchiveIndexView, YearArchiveView, MonthArchiveView,
+-                                     WeekArchiveView, DayArchiveView, TodayArchiveView,
+-                                     DateDetailView)
+-from django.views.generic.detail import DetailView
+-from django.views.generic.edit import CreateView, UpdateView, DeleteView
+-from django.views.generic.list import ListView
+-
+-
+-class GenericViewError(Exception):
+-    """A problem in a generic view."""
+-    pass
+diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/list_detail.py cbv/views/list_detail.py
+--- ../django-trunk/django/views/generic/list_detail.py	2010-11-28 00:31:46.000000000 +0100
++++ cbv/views/list_detail.py	2010-12-14 00:07:21.959547002 +0100
+@@ -1,20 +1,21 @@
++import warnings
+ from django.template import loader, RequestContext
+ from django.http import Http404, HttpResponse
+ from django.core.xheaders import populate_xheaders
+ from django.core.paginator import Paginator, InvalidPage
+ from django.core.exceptions import ObjectDoesNotExist
+ 
+-import warnings
++
+ warnings.warn(
+-    'Function-based generic views have been deprecated; use class-based views instead.',
+-    PendingDeprecationWarning
++    'Function-based generic views have been deprecated; use class-based views '
++    'instead.', PendingDeprecationWarning
+ )
+ 
+ 
+ def object_list(request, queryset, paginate_by=None, page=None,
+         allow_empty=True, template_name=None, template_loader=loader,
+-        extra_context=None, context_processors=None, template_object_name='object',
+-        mimetype=None):
++        extra_context=None, context_processors=None,
++        template_object_name='object', mimetype=None):
+     """
+     Generic list of objects.
+ 
+@@ -52,7 +53,8 @@
+     if extra_context is None: extra_context = {}
+     queryset = queryset._clone()
+     if paginate_by:
+-        paginator = Paginator(queryset, paginate_by, allow_empty_first_page=allow_empty)
++        paginator = Paginator(queryset, paginate_by,
++                              allow_empty_first_page=allow_empty)
+         if not page:
+             page = request.GET.get('page', 1)
+         try:
+@@ -103,7 +105,10 @@
+             c[key] = value
+     if not template_name:
+         model = queryset.model
+-        template_name = "%s/%s_list.html" % (model._meta.app_label, model._meta.object_name.lower())
++        template_name = "%s/%s_list.html" % (
++            model._meta.app_label,
++            model._meta.object_name.lower()
++            )
+     t = template_loader.get_template(template_name)
+     return HttpResponse(t.render(c), mimetype=mimetype)
+ 
+@@ -127,13 +132,18 @@
+     elif slug and slug_field:
+         queryset = queryset.filter(**{slug_field: slug})
+     else:
+-        raise AttributeError("Generic detail view must be called with either an object_id or a slug/slug_field.")
++        raise AttributeError("Generic detail view must be called with either "
++                             "an object_id or a slug/slug_field.")
+     try:
+         obj = queryset.get()
+     except ObjectDoesNotExist:
+-        raise Http404("No %s found matching the query" % (model._meta.verbose_name))
++        raise Http404(
++            "No %s found matching the query" % (model._meta.verbose_name)
++            )
+     if not template_name:
+-        template_name = "%s/%s_detail.html" % (model._meta.app_label, model._meta.object_name.lower())
++        template_name = "%s/%s_detail.html" % (
++            model._meta.app_label, model._meta.object_name.lower()
++            )
+     if template_name_field:
+         template_name_list = [getattr(obj, template_name_field), template_name]
+         t = template_loader.select_template(template_name_list)
+diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/list.py cbv/views/list.py
+--- ../django-trunk/django/views/generic/list.py	2010-12-14 10:13:07.019272001 +0100
++++ cbv/views/list.py	2010-12-14 10:20:17.939272000 +0100
+@@ -1,8 +1,9 @@
+-from django.core.paginator import Paginator, InvalidPage
++from cbv.views.base import TemplateResponseMixin, View
+ from django.core.exceptions import ImproperlyConfigured
++from django.core.paginator import Paginator, InvalidPage
+ from django.http import Http404
+ from django.utils.encoding import smart_str
+-from django.views.generic.base import TemplateResponseMixin, View
++
+ 
+ class MultipleObjectMixin(object):
+     allow_empty = True
+@@ -32,7 +33,11 @@
+         """
+         Paginate the queryset, if needed.
+         """
+-        paginator = self.get_paginator(queryset, page_size, allow_empty_first_page=self.get_allow_empty())
++        paginator = self.get_paginator(
++            queryset,
++            page_size,
++            allow_empty_first_page=self.get_allow_empty()
++            )
+         if paginator.num_pages > 1:
+             page = self.kwargs.get('page') or self.request.GET.get('page') or 1
+             try:
+@@ -41,7 +46,8 @@
+                 if page == 'last':
+                     page_number = paginator.num_pages
+                 else:
+-                    raise Http404("Page is not 'last', nor can it be converted to an int.")
++                    raise Http404("Page is not 'last', nor can it be converted "
++                                  "to an int.")
+             try:
+                 page = paginator.page(page_number)
+                 return (paginator, page, page.object_list, True)
+@@ -56,11 +62,17 @@
+         """
+         return self.paginate_by
+ 
+-    def get_paginator(self, queryset, per_page, orphans=0, allow_empty_first_page=True):
++    def get_paginator(self, queryset, per_page, orphans=0,
++                      allow_empty_first_page=True):
+         """
+         Return an instance of the paginator for this view.
+         """
+-        return self.paginator_class(queryset, per_page, orphans=orphans, allow_empty_first_page=allow_empty_first_page)
++        return self.paginator_class(
++            queryset,
++            per_page,
++            orphans=orphans,
++            allow_empty_first_page=allow_empty_first_page
++            )
+ 
+     def get_allow_empty(self):
+         """
+@@ -87,7 +99,8 @@
+         queryset = kwargs.pop('object_list')
+         page_size = self.get_paginate_by(queryset)
+         if page_size:
+-            paginator, page, queryset, is_paginated = self.paginate_queryset(queryset, page_size)
++            paginator, page, queryset, is_paginated = \
++                self.paginate_queryset(queryset, page_size)
+             context = {
+                 'paginator': paginator,
+                 'page_obj': page,
+@@ -126,7 +139,8 @@
+         Return a list of template names to be used for the request. Must return
+         a list. May not be called if get_template is overridden.
+         """
+-        names = super(MultipleObjectTemplateResponseMixin, self).get_template_names()
++        sup = super(MultipleObjectTemplateResponseMixin, self)
++        names = sup.get_template_names()
+ 
+         # If the list is a queryset, we'll invent a template name based on the
+         # app and model name. This name gets put at the end of the template
+@@ -134,7 +148,11 @@
+         # generated ones.
+         if hasattr(self.object_list, 'model'):
+             opts = self.object_list.model._meta
+-            names.append("%s/%s%s.html" % (opts.app_label, opts.object_name.lower(), self.template_name_suffix))
++            names.append("%s/%s%s.html" % (
++                opts.app_label,
++                opts.object_name.lower(),
++                self.template_name_suffix
++                ))
+ 
+         return names
+ 
+diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/simple.py cbv/views/simple.py
+--- ../django-trunk/django/views/generic/simple.py	2010-11-12 11:05:17.000000000 +0100
++++ cbv/views/simple.py	2010-12-14 00:07:21.959547002 +0100
+@@ -1,17 +1,21 @@
++import logging
++import warnings
++from django.http import HttpResponse, HttpResponseRedirect
++from django.http import HttpResponsePermanentRedirect, HttpResponseGone
+ from django.template import loader, RequestContext
+-from django.http import HttpResponse, HttpResponseRedirect, HttpResponsePermanentRedirect, HttpResponseGone
+-from django.utils.log import getLogger
+ 
+-import warnings
++
+ warnings.warn(
+-    'Function-based generic views have been deprecated; use class-based views instead.',
+-    PendingDeprecationWarning
++    'Function-based generic views have been deprecated; use class-based views '
++    'instead.', PendingDeprecationWarning
+ )
+ 
+-logger = getLogger('django.request')
++
++logger = logging.getLogger('cbv')
+ 
+ 
+-def direct_to_template(request, template, extra_context=None, mimetype=None, **kwargs):
++def direct_to_template(request, template, extra_context=None, mimetype=None,
++                       **kwargs):
+     """
+     Render a given template with any extra URL parameters in the context as
+     ``{{ params }}``.
+@@ -53,12 +57,14 @@
+         url = "%s?%s" % (url, args)
+ 
+     if url is not None:
+-        klass = permanent and HttpResponsePermanentRedirect or HttpResponseRedirect
+-        return klass(url % kwargs)
++        if permanent:
++            return HttpResponsePermanentRedirect(url % kwargs)
++        return HttpResponseRedirect(url % kwargs)
+     else:
+-        logger.warning('Gone: %s' % request.path,
+-                    extra={
+-                        'status_code': 410,
+-                        'request': request
+-                    })
++        logger.warning(
++            'Gone: %s' % request.path,
++            extra={
++                'status_code': 410,
++                'request': request
++            })
+         return HttpResponseGone()

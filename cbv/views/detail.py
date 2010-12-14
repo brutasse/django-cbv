@@ -1,5 +1,5 @@
 import re
-from cbv.base import TemplateResponseMixin, View
+from cbv.views.base import TemplateResponseMixin, View
 from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 from django.http import Http404
 
@@ -60,8 +60,8 @@ class SingleObjectMixin(object):
             else:
                 raise ImproperlyConfigured(
                     u"%(cls)s is missing a queryset. Define %(cls)s.model, "
-                    u"%(cls)s.queryset, or override %(cls)s.get_object()." %
-                    {'cls': self.__class__.__name__}
+                    u"%(cls)s.queryset, or override %(cls)s.get_object()." % {
+                        'cls': self.__class__.__name__ }
                     )
         return self.queryset._clone()
 
@@ -142,4 +142,3 @@ class DetailView(SingleObjectTemplateResponseMixin, BaseDetailView):
     By default this is a model instance looked up from `self.queryset`, but the
     view will support display of *any* object by overriding `self.get_object()`.
     """
-

@@ -7,11 +7,12 @@ class ContentNotRenderedError(Exception):
 
 
 class SimpleTemplateResponse(HttpResponse):
+
     def __init__(self, template, context=None, mimetype=None, status=None,
             content_type=None):
         # It would seem obvious to call these next two members 'template' and
         # 'context', but those names are reserved as part of the test Client
-        # API.  To avoid the name collision, we use tricky-to-debug problems
+        # API.
         self.template_name = template
         self.context_data = context
 
@@ -45,13 +46,12 @@ class SimpleTemplateResponse(HttpResponse):
 
     @property
     def rendered_content(self):
-        """
-        Returns the freshly rendered content for the template and context
+        """Returns the freshly rendered content for the template and context
         described by the TemplateResponse.
 
         This *does not* set the final content of the response. To set the
-        response content, you must either call render(), or set the content
-        explicitly using the value of this property.
+        response content, you must either call render(), or set the
+        content explicitly using the value of this property.
         """
         template = self.resolve_template(self.template_name)
         context = self.resolve_context(self.context_data)
@@ -99,19 +99,17 @@ class TemplateResponse(SimpleTemplateResponse):
     def __init__(self, request, template, context=None, mimetype=None,
             status=None, content_type=None):
         # self.request gets over-written by django.test.client.Client - and
-        # unlike context_data and template_name the _request should not be
-        # considered part of the public API.
+        # unlike context_data and template_name the _request should not
+        # be considered part of the public API.
         self._request = request
         super(TemplateResponse, self).__init__(
             template, context, mimetype, status, content_type)
 
     def resolve_context(self, context):
-        """
-        Convert context data into a full RequestContext object (assuming it
-        isn't already a Context object).
+        """Convert context data into a full RequestContext object
+        (assuming it isn't already a Context object).
         """
         if isinstance(context, Context):
             return context
         else:
             return RequestContext(self._request, context)
-

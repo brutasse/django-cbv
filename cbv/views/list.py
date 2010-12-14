@@ -1,4 +1,4 @@
-from cbv.base import TemplateResponseMixin, View
+from cbv.views.base import TemplateResponseMixin, View
 from django.core.exceptions import ImproperlyConfigured
 from django.core.paginator import Paginator, InvalidPage
 from django.http import Http404
@@ -33,14 +33,13 @@ class MultipleObjectMixin(object):
         """
         Paginate the queryset, if needed.
         """
-        if queryset.count() > page_size:
-            paginator = self.get_paginator(
-                queryset,
-                page_size,
-                allow_empty_first_page=self.get_allow_empty()
-                )
-            page = (self.kwargs.get('page', None) or
-                    self.request.GET.get('page', 1))
+        paginator = self.get_paginator(
+            queryset,
+            page_size,
+            allow_empty_first_page=self.get_allow_empty()
+            )
+        if paginator.num_pages > 1:
+            page = self.kwargs.get('page') or self.request.GET.get('page') or 1
             try:
                 page_number = int(page)
             except ValueError:
@@ -101,7 +100,7 @@ class MultipleObjectMixin(object):
         page_size = self.get_paginate_by(queryset)
         if page_size:
             paginator, page, queryset, is_paginated = \
-                    self.paginate_queryset(queryset, page_size)
+                self.paginate_queryset(queryset, page_size)
             context = {
                 'paginator': paginator,
                 'page_obj': page,
@@ -149,9 +148,11 @@ class MultipleObjectTemplateResponseMixin(TemplateResponseMixin):
         # generated ones.
         if hasattr(self.object_list, 'model'):
             opts = self.object_list.model._meta
-            names.append("%s/%s%s.html" % (opts.app_label,
-                opts.object_name.lower(), self.template_name_suffix)
-                )
+            names.append("%s/%s%s.html" % (
+                opts.app_label,
+                opts.object_name.lower(),
+                self.template_name_suffix
+                ))
 
         return names
 
@@ -160,4 +161,3 @@ class ListView(MultipleObjectTemplateResponseMixin, BaseListView):
     Render some list of objects, set by `self.model` or `self.queryset`.
     `self.queryset` can actually be any iterable of items, not just a queryset.
     """
-

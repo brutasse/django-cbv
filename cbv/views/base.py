@@ -23,8 +23,7 @@ class View(object):
     dispatch-by-method and simple sanity checking.
     """
 
-    http_method_names = ['get', 'post', 'put', 'delete', 'head', 'options',
-                         'trace']
+    http_method_names = ['get', 'post', 'put', 'delete', 'head', 'options', 'trace']
 
     def __init__(self, **kwargs):
         """
@@ -68,7 +67,7 @@ class View(object):
         # defer to the error handler. Also defer to the error handler if the
         # request method isn't on the approved list.
         if request.method.lower() in self.http_method_names:
-            handler = getattr(self,request.method.lower(),
+            handler = getattr(self, request.method.lower(),
                               self.http_method_not_allowed)
         else:
             handler = self.http_method_not_allowed
@@ -78,8 +77,7 @@ class View(object):
         return handler(request, *args, **kwargs)
 
     def http_method_not_allowed(self, request, *args, **kwargs):
-        allowed_methods = [m for m in self.http_method_names
-                           if hasattr(self, m)]
+        allowed_methods = [m for m in self.http_method_names if hasattr(self, m)]
         logger.warning(
             'Method Not Allowed (%s): %s' % (request.method, request.path),
             extra={
@@ -110,8 +108,8 @@ class TemplateResponseMixin(object):
 
     def get_template_names(self):
         """
-        Return a list of template names to be used for the request. Must return
-        a list. May not be called if get_template is overridden.
+        Returns a list of template names to be used for the request. Must return
+        a list. May not be called if render_to_response is overridden.
         """
         if self.template_name is None:
             return []
@@ -125,7 +123,7 @@ class TemplateView(TemplateResponseMixin, View):
     """
     def get_context_data(self, **kwargs):
         return {
-            'params': kwargs,
+            'params': kwargs
         }
 
     def get(self, request, *args, **kwargs):
@@ -171,4 +169,3 @@ class RedirectView(View):
                             'request': self.request
                         })
             return http.HttpResponseGone()
-

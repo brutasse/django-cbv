@@ -46,12 +46,9 @@ def get_model_and_form_class(model, form_class):
         # and passing in a temporary inner class.
         class Meta:
             model = tmp_model
-        class_name = model.__name__ + 'Form'
-        form_class = ModelFormMetaclass(
-            class_name,
-            (ModelForm,),
-            {'Meta': Meta}
-            )
+        name = model.__name__ + 'Form'
+        attrs = {'Meta': Meta}
+        form_class = ModelFormMetaclass(name, (ModelForm,), attrs)
         return model, form_class
     raise GenericViewError("Generic view must be called with either a model or"
                            " form_class argument.")
@@ -132,8 +129,10 @@ def create_object(request, model=None, template_name=None,
 
     # Create the template, context, response
     if not template_name:
-        template_name = "%s/%s_form.html" % (model._meta.app_label,
-                                             model._meta.object_name.lower())
+        template_name = "%s/%s_form.html" % (
+            model._meta.app_label,
+            model._meta.object_name.lower()
+            )
     t = template_loader.get_template(template_name)
     c = RequestContext(request, {
         'form': form,
@@ -167,16 +166,18 @@ def update_object(request, model=None, object_id=None, slug=None,
         form = form_class(request.POST, request.FILES, instance=obj)
         if form.is_valid():
             obj = form.save()
-            msg = ugettext("The %(verbose_name)s was updated successfully.")
-            msg = msg % {"verbose_name": model._meta.verbose_name}
+            msg = ugettext("The %(verbose_name)s was updated successfully.") %\
+                                    {"verbose_name": model._meta.verbose_name}
             messages.success(request, msg, fail_silently=True)
             return redirect(post_save_redirect, obj)
     else:
         form = form_class(instance=obj)
 
     if not template_name:
-        template_name = "%s/%s_form.html" % (model._meta.app_label,
-                                             model._meta.object_name.lower())
+        template_name = "%s/%s_form.html" % (
+            model._meta.app_label,
+            model._meta.object_name.lower()
+            )
     t = template_loader.get_template(template_name)
     c = RequestContext(request, {
         'form': form,
@@ -231,4 +232,3 @@ def delete_object(request, model, post_delete_redirect, object_id=None,
         populate_xheaders(request, response, model,
                           getattr(obj, obj._meta.pk.attname))
         return response
-

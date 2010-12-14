@@ -1,9 +1,9 @@
 import logging
-from cbv.base import View, TemplateView, RedirectView
-from cbv.dates import *
-from cbv.detail import DetailView
-from cbv.edit import CreateView, UpdateView, DeleteView
-from cbv.list import ListView
+from cbv.views.base import View, TemplateView, RedirectView
+from cbv.views.dates import *
+from cbv.views.detail import DetailView
+from cbv.views.edit import CreateView, UpdateView, DeleteView
+from cbv.views.list import ListView
 
 
 class GenericViewError(Exception):

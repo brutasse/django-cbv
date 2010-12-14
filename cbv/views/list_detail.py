@@ -1,9 +1,9 @@
 import warnings
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.paginator import Paginator, InvalidPage
-from django.core.xheaders import populate_xheaders
-from django.http import Http404, HttpResponse
 from django.template import loader, RequestContext
+from django.http import Http404, HttpResponse
+from django.core.xheaders import populate_xheaders
+from django.core.paginator import Paginator, InvalidPage
+from django.core.exceptions import ObjectDoesNotExist
 
 
 warnings.warn(
@@ -105,8 +105,10 @@ def object_list(request, queryset, paginate_by=None, page=None,
             c[key] = value
     if not template_name:
         model = queryset.model
-        template_name = "%s/%s_list.html" % (model._meta.app_label,
-                                             model._meta.object_name.lower())
+        template_name = "%s/%s_list.html" % (
+            model._meta.app_label,
+            model._meta.object_name.lower()
+            )
     t = template_loader.get_template(template_name)
     return HttpResponse(t.render(c), mimetype=mimetype)
 
@@ -135,11 +137,13 @@ def object_detail(request, queryset, object_id=None, slug=None,
     try:
         obj = queryset.get()
     except ObjectDoesNotExist:
-        raise Http404("No %s found matching the query" % (
-            model._meta.verbose_name))
+        raise Http404(
+            "No %s found matching the query" % (model._meta.verbose_name)
+            )
     if not template_name:
-        template_name = "%s/%s_detail.html" % (model._meta.app_label,
-                                               model._meta.object_name.lower())
+        template_name = "%s/%s_detail.html" % (
+            model._meta.app_label, model._meta.object_name.lower()
+            )
     if template_name_field:
         template_name_list = [getattr(obj, template_name_field), template_name]
         t = template_loader.select_template(template_name_list)
@@ -156,4 +160,3 @@ def object_detail(request, queryset, object_id=None, slug=None,
     response = HttpResponse(t.render(c), mimetype=mimetype)
     populate_xheaders(request, response, model, getattr(obj, obj._meta.pk.name))
     return response
-

@@ -2,7 +2,7 @@ Django Class Based Views
 ========================
 
 This is Django Class Based Views taken from Django trunk. Replace all the
-references from ``django.views.generic`` to ``cbv`` in the documentation.
+references from ``django.views.generic`` to ``cbv.views`` in the documentation.
 
 You will need the following middleware installed::
 

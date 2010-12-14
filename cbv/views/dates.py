@@ -1,16 +1,18 @@
 import datetime
 import time
-from cbv.base import View
-from cbv.detail import BaseDetailView, SingleObjectTemplateResponseMixin
-from cbv.list import MultipleObjectMixin, MultipleObjectTemplateResponseMixin
+from cbv.views.base import View
+from cbv.views.detail import BaseDetailView, SingleObjectTemplateResponseMixin
+from cbv.views.list import MultipleObjectMixin
+from cbv.views.list import MultipleObjectTemplateResponseMixin
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.http import Http404
 
 
-__all__ = ('ArchiveIndexView', 'YearArchiveView', 'MonthArchiveView',
-           'DateDetailView', 'WeekArchiveView', 'DayArchiveView',
-           'TodayArchiveView')
+__all__ =  (
+    'ArchiveIndexView', 'YearArchiveView', 'MonthArchiveView', 'WeekArchiveView',
+    'DayArchiveView', 'TodayArchiveView', 'DateDetailView'
+)
 
 
 class YearMixin(object):
@@ -68,8 +70,7 @@ class MonthMixin(object):
         """
         first_day, last_day = _month_bounds(date)
         next = (last_day + datetime.timedelta(days=1)).replace(day=1)
-        return _get_next_prev_month(self, next, is_previous=False,
-                                    use_first_day=True)
+        return _get_next_prev_month(self, next, False, True)
 
     def get_previous_month(self, date):
         """
@@ -77,8 +78,7 @@ class MonthMixin(object):
         """
         first_day, last_day = _month_bounds(date)
         prev = (first_day - datetime.timedelta(days=1)).replace(day=1)
-        return _get_next_prev_month(self, prev, is_previous=True,
-                                    use_first_day=True)
+        return _get_next_prev_month(self, prev, True, True)
 
 
 class DayMixin(object):
@@ -110,16 +110,14 @@ class DayMixin(object):
         Get the next valid day.
         """
         next = date + datetime.timedelta(days=1)
-        return _get_next_prev_month(self, next, is_previous=False,
-                                    use_first_day=False)
+        return _get_next_prev_month(self, next, False, False)
 
     def get_previous_day(self, date):
         """
         Get the previous valid day.
         """
         prev = date - datetime.timedelta(days=1)
-        return _get_next_prev_month(self, prev, is_previous=True,
-                                    use_first_day=False)
+        return _get_next_prev_month(self, prev, True, False)
 
 
 class WeekMixin(object):
@@ -159,9 +157,8 @@ class DateMixin(object):
         Get the name of the date field to be used to filter by.
         """
         if self.date_field is None:
-            raise ImproperlyConfigured(
-                u"%s.date_field is required." % self.__class__.__name__
-                )
+            raise ImproperlyConfigured(u"%s.date_field is required." %
+                                       self.__class__.__name__)
         return self.date_field
 
     def get_allow_future(self):
@@ -189,9 +186,8 @@ class BaseDateListView(MultipleObjectMixin, DateMixin, View):
         """
         Obtain the list of dates and itesm
         """
-        raise NotImplementedError(
-            'A DateView must provide an implementation of get_dated_items()'
-            )
+        raise NotImplementedError('A DateView must provide an implementation '
+                                  'of get_dated_items()')
 
     def get_dated_queryset(self, **lookup):
         """
@@ -207,9 +203,8 @@ class BaseDateListView(MultipleObjectMixin, DateMixin, View):
             qs = qs.filter(**{'%s__lte' % date_field: datetime.datetime.now()})
 
         if not allow_empty and not qs:
-            raise Http404(u"No %s available" %
-                unicode(qs.model._meta.verbose_name_plural)
-                )
+            name = unicode(qs.model._meta.verbose_name_plural)
+            raise Http404(u"No %s available" % name)
 
         return qs
 
@@ -223,9 +218,8 @@ class BaseDateListView(MultipleObjectMixin, DateMixin, View):
 
         date_list = queryset.dates(date_field, date_type)[::-1]
         if date_list is not None and not date_list and not allow_empty:
-            raise Http404(u"No %s available" %
-                unicode(qs.model._meta.verbose_name_plural)
-                )
+            name = unicode(qs.model._meta.verbose_name_plural)
+            raise Http404(u"No %s available" % name)
 
         return date_list
 
@@ -487,7 +481,7 @@ class BaseDateDetailView(YearMixin, MonthMixin, DayMixin, DateMixin,
             raise Http404(
                 "Future %s not available because %s.allow_future is False." % (
                 qs.model._meta.verbose_name_plural, self.__class__.__name__)
-            )
+                )
 
         # Filter down a queryset from self.queryset using the date from the
         # URL. This'll get passed as the queryset to DetailView.get_object,
@@ -520,8 +514,8 @@ def _date_from_string(year, year_format, month, month_format, day='',
     try:
         return datetime.date(*time.strptime(datestr, format)[:3])
     except ValueError:
-        raise Http404(u"Invalid date string '%s' given format '%s'" %
-            (datestr, format)
+        raise Http404(
+            u"Invalid date string '%s' given format '%s'" % (datestr, format)
             )
 
 def _month_bounds(date):

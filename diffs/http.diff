@@ -1,0 +1,52 @@
+--- ../django-trunk/django/template/response.py	2010-12-14 10:13:07.719272001 +0100
++++ cbv/http.py	2010-12-14 00:07:21.949552002 +0100
+@@ -1,22 +1,23 @@
+ from django.http import HttpResponse
+ from django.template import loader, Context, RequestContext
+ 
++
+ class ContentNotRenderedError(Exception):
+     pass
+ 
++
+ class SimpleTemplateResponse(HttpResponse):
+ 
+     def __init__(self, template, context=None, mimetype=None, status=None,
+             content_type=None):
+         # It would seem obvious to call these next two members 'template' and
+-        # 'context', but those names are reserved as part of the test Client API.
+-        # To avoid the name collision, we use
+-        # tricky-to-debug problems
++        # 'context', but those names are reserved as part of the test Client
++        # API.
+         self.template_name = template
+         self.context_data = context
+ 
+-        # _is_rendered tracks whether the template and context has been baked into
+-        # a final response.
++        # _is_rendered tracks whether the template and context has been baked
++        # into a final response.
+         self._is_rendered = False
+ 
+         # content argument doesn't make sense here because it will be replaced
+@@ -72,12 +73,18 @@
+ 
+     def __iter__(self):
+         if not self._is_rendered:
+-            raise ContentNotRenderedError('The response content must be rendered before it can be iterated over.')
++            raise ContentNotRenderedError(
++                'The response content must be rendered before it can be '
++                'iterated over.'
++                )
+         return super(SimpleTemplateResponse, self).__iter__()
+ 
+     def _get_content(self):
+         if not self._is_rendered:
+-            raise ContentNotRenderedError('The response content must be rendered before it can be accessed.')
++            raise ContentNotRenderedError(
++                'The response content must be rendered before it can be '
++                'accessed.'
++                )
+         return super(SimpleTemplateResponse, self)._get_content()
+ 
+     def _set_content(self, value):
