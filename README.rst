@@ -3,7 +3,7 @@ Django Class Based Views
 
 This is Django Class Based Views taken from Django trunk. Replace all the
 references from ``django.views.generic`` to ``cbv`` in the documentation.
-All views are avabalie directly from ``cbv`` module, for example::
+All views are available directly from ``cbv`` module, for example::
 
     from cbv import View, TemplateView
 
