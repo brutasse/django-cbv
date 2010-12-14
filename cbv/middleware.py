@@ -1,6 +1,6 @@
 class DeferredRenderingMiddleware(object):
     """
-    Middleware that renders defferred rendered responses for Django < 1.3.
+    Middleware that renders deferred rendered responses for Django < 1.3.
     """
     def process_response(self, request, response):
         try:
