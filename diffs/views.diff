@@ -579,7 +579,7 @@ diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/dj
 @@ -1,9 +1,9 @@
 -from django.forms import models as model_forms
 +from cbv.views.base import TemplateResponseMixin, View
-+from cbv.views.detail import BaseDetailView SingleObjectMixin
++from cbv.views.detail import BaseDetailView, SingleObjectMixin
 +from cbv.views.detail import SingleObjectTemplateResponseMixin
  from django.core.exceptions import ImproperlyConfigured
 +from django.forms import models as model_forms
