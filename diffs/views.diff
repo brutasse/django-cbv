@@ -1,6 +1,6 @@
-diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/base.py cbv/views/base.py
---- ../django-trunk/django/views/generic/base.py	2010-12-14 10:13:07.019272001 +0100
-+++ cbv/views/base.py	2010-12-14 00:07:21.959547002 +0100
+diff -Naur --exclude='*.pyc' --exclude='*.py?*' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/base.py cbv/views/base.py
+--- ../django-trunk/django/views/generic/base.py	2010-12-15 18:13:37.241174595 +0100
++++ cbv/views/base.py	2011-01-16 16:35:37.061126960 +0100
 @@ -1,12 +1,21 @@
 -from django import http
 +import logging
@@ -48,9 +48,9 @@ diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/dj
              extra={
                  'status_code': 405,
                  'request': self.request
-diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/create_update.py cbv/views/create_update.py
---- ../django-trunk/django/views/generic/create_update.py	2010-11-12 11:05:17.000000000 +0100
-+++ cbv/views/create_update.py	2010-12-14 00:07:21.949552002 +0100
+diff -Naur --exclude='*.pyc' --exclude='*.py?*' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/create_update.py cbv/views/create_update.py
+--- ../django-trunk/django/views/generic/create_update.py	2010-12-15 18:13:37.241174595 +0100
++++ cbv/views/create_update.py	2011-01-16 16:35:37.061126960 +0100
 @@ -1,17 +1,18 @@
 +import warnings
 +from cbv import GenericViewError
@@ -144,9 +144,9 @@ diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/dj
 +        populate_xheaders(request, response, model,
 +                          getattr(obj, obj._meta.pk.attname))
          return response
-diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/date_based.py cbv/views/date_based.py
---- ../django-trunk/django/views/generic/date_based.py	2010-11-12 11:05:17.000000000 +0100
-+++ cbv/views/date_based.py	2010-12-14 00:07:21.949552002 +0100
+diff -Naur --exclude='*.pyc' --exclude='*.py?*' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/date_based.py cbv/views/date_based.py
+--- ../django-trunk/django/views/generic/date_based.py	2010-12-15 18:13:37.241174595 +0100
++++ cbv/views/date_based.py	2011-01-16 16:35:37.061126960 +0100
 @@ -1,16 +1,16 @@
  import datetime
  import time
@@ -338,9 +338,9 @@ diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/dj
      if template_name_field:
          template_name_list = [getattr(obj, template_name_field), template_name]
          t = template_loader.select_template(template_name_list)
-diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/dates.py cbv/views/dates.py
---- ../django-trunk/django/views/generic/dates.py	2010-11-28 00:31:46.000000000 +0100
-+++ cbv/views/dates.py	2010-12-14 10:19:13.839272001 +0100
+diff -Naur --exclude='*.pyc' --exclude='*.py?*' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/dates.py cbv/views/dates.py
+--- ../django-trunk/django/views/generic/dates.py	2010-12-15 18:13:37.241174595 +0100
++++ cbv/views/dates.py	2011-01-16 16:35:37.061126960 +0100
 @@ -1,11 +1,18 @@
 -import time
  import datetime
@@ -533,20 +533,21 @@ diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/dj
      """
      Helper: Get the next or the previous valid date. The idea is to allow
      links on month/day views to never be 404s by never providing a date
-diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/detail.py cbv/views/detail.py
---- ../django-trunk/django/views/generic/detail.py	2010-11-12 11:05:17.000000000 +0100
-+++ cbv/views/detail.py	2010-12-14 10:19:22.659272001 +0100
-@@ -1,8 +1,7 @@
+diff -Naur --exclude='*.pyc' --exclude='*.py?*' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/detail.py cbv/views/detail.py
+--- ../django-trunk/django/views/generic/detail.py	2011-01-16 16:32:57.733627271 +0100
++++ cbv/views/detail.py	2011-01-16 16:40:45.492378230 +0100
+@@ -1,9 +1,8 @@
  import re
 -
 +from cbv.views.base import TemplateResponseMixin, View
  from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
  from django.http import Http404
+ from django.utils.encoding import smart_str
 -from django.views.generic.base import TemplateResponseMixin, View
  
  
  class SingleObjectMixin(object):
-@@ -59,11 +58,11 @@
+@@ -60,11 +59,11 @@
              if self.model:
                  return self.model._default_manager.all()
              else:
@@ -563,7 +564,7 @@ diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/dj
          return self.queryset._clone()
  
      def get_slug_field(self):
-@@ -108,7 +107,8 @@
+@@ -109,7 +108,8 @@
          Return a list of template names to be used for the request. Must return
          a list. May not be called if get_template is overridden.
          """
@@ -573,13 +574,13 @@ diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/dj
  
          # If self.template_name_field is set, grab the value of the field
          # of that name from the object; this is the most specific template
-diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/edit.py cbv/views/edit.py
---- ../django-trunk/django/views/generic/edit.py	2010-12-14 10:13:07.019272001 +0100
-+++ cbv/views/edit.py	2010-12-14 10:20:05.589272000 +0100
+diff -Naur --exclude='*.pyc' --exclude='*.py?*' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/edit.py cbv/views/edit.py
+--- ../django-trunk/django/views/generic/edit.py	2010-12-15 18:13:37.241174595 +0100
++++ cbv/views/edit.py	2011-01-16 16:45:38.981127024 +0100
 @@ -1,9 +1,9 @@
 -from django.forms import models as model_forms
 +from cbv.views.base import TemplateResponseMixin, View
-+from cbv.views.detail import BaseDetailView SingleObjectMixin
++from cbv.views.detail import BaseDetailView, SingleObjectMixin
 +from cbv.views.detail import SingleObjectTemplateResponseMixin
  from django.core.exceptions import ImproperlyConfigured
 +from django.forms import models as model_forms
@@ -590,25 +591,25 @@ diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/dj
  
  
  class FormMixin(object):
-diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/__init__.py cbv/views/__init__.py
---- ../django-trunk/django/views/generic/__init__.py	2010-11-12 11:05:17.000000000 +0100
-+++ cbv/views/__init__.py	2010-12-14 00:07:21.949552002 +0100
+diff -Naur --exclude='*.pyc' --exclude='*.py?*' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/__init__.py cbv/views/__init__.py
+--- ../django-trunk/django/views/generic/__init__.py	2011-01-16 16:32:57.733627271 +0100
++++ cbv/views/__init__.py	2011-01-16 16:44:50.461936954 +0100
 @@ -1,12 +0,0 @@
 -from django.views.generic.base import View, TemplateView, RedirectView
 -from django.views.generic.dates import (ArchiveIndexView, YearArchiveView, MonthArchiveView,
 -                                     WeekArchiveView, DayArchiveView, TodayArchiveView,
 -                                     DateDetailView)
 -from django.views.generic.detail import DetailView
--from django.views.generic.edit import CreateView, UpdateView, DeleteView
+-from django.views.generic.edit import FormView, CreateView, UpdateView, DeleteView
 -from django.views.generic.list import ListView
 -
 -
 -class GenericViewError(Exception):
 -    """A problem in a generic view."""
 -    pass
-diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/list_detail.py cbv/views/list_detail.py
---- ../django-trunk/django/views/generic/list_detail.py	2010-11-28 00:31:46.000000000 +0100
-+++ cbv/views/list_detail.py	2010-12-14 00:07:21.959547002 +0100
+diff -Naur --exclude='*.pyc' --exclude='*.py?*' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/list_detail.py cbv/views/list_detail.py
+--- ../django-trunk/django/views/generic/list_detail.py	2010-12-15 18:13:37.241174595 +0100
++++ cbv/views/list_detail.py	2011-01-16 16:35:58.581126868 +0100
 @@ -1,20 +1,21 @@
 +import warnings
  from django.template import loader, RequestContext
@@ -680,10 +681,12 @@ diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/dj
      if template_name_field:
          template_name_list = [getattr(obj, template_name_field), template_name]
          t = template_loader.select_template(template_name_list)
-diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/list.py cbv/views/list.py
---- ../django-trunk/django/views/generic/list.py	2010-12-14 10:13:07.019272001 +0100
-+++ cbv/views/list.py	2010-12-14 10:20:17.939272000 +0100
-@@ -1,8 +1,9 @@
+diff -Naur --exclude='*.pyc' --exclude='*.py?*' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/list.py cbv/views/list.py
+--- ../django-trunk/django/views/generic/list.py	2011-01-16 16:32:57.733627271 +0100
++++ cbv/views/list.py	2011-01-16 16:43:17.681126892 +0100
+@@ -1,10 +1,9 @@
+ import re
+-
 -from django.core.paginator import Paginator, InvalidPage
 +from cbv.views.base import TemplateResponseMixin, View
  from django.core.exceptions import ImproperlyConfigured
@@ -691,11 +694,10 @@ diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/dj
  from django.http import Http404
  from django.utils.encoding import smart_str
 -from django.views.generic.base import TemplateResponseMixin, View
-+
+ 
  
  class MultipleObjectMixin(object):
-     allow_empty = True
-@@ -32,7 +33,11 @@
+@@ -35,7 +34,11 @@
          """
          Paginate the queryset, if needed.
          """
@@ -705,20 +707,20 @@ diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/dj
 +            page_size,
 +            allow_empty_first_page=self.get_allow_empty()
 +            )
-         if paginator.num_pages > 1:
-             page = self.kwargs.get('page') or self.request.GET.get('page') or 1
-             try:
-@@ -41,7 +46,8 @@
-                 if page == 'last':
-                     page_number = paginator.num_pages
-                 else:
--                    raise Http404("Page is not 'last', nor can it be converted to an int.")
-+                    raise Http404("Page is not 'last', nor can it be converted "
-+                                  "to an int.")
-             try:
-                 page = paginator.page(page_number)
-                 return (paginator, page, page.object_list, True)
-@@ -56,11 +62,17 @@
+         page = self.kwargs.get('page') or self.request.GET.get('page') or 1
+         try:
+             page_number = int(page)
+@@ -43,7 +46,8 @@
+             if page == 'last':
+                 page_number = paginator.num_pages
+             else:
+-                raise Http404("Page is not 'last', nor can it be converted to an int.")
++                raise Http404("Page is not 'last', nor can it be converted "
++                              "to an int.")
+         try:
+             page = paginator.page(page_number)
+             return (paginator, page, page.object_list, True)
+@@ -56,11 +60,17 @@
          """
          return self.paginate_by
  
@@ -738,7 +740,7 @@ diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/dj
  
      def get_allow_empty(self):
          """
-@@ -87,7 +99,8 @@
+@@ -88,7 +98,8 @@
          queryset = kwargs.pop('object_list')
          page_size = self.get_paginate_by(queryset)
          if page_size:
@@ -748,7 +750,7 @@ diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/dj
              context = {
                  'paginator': paginator,
                  'page_obj': page,
-@@ -126,7 +139,8 @@
+@@ -127,7 +138,8 @@
          Return a list of template names to be used for the request. Must return
          a list. May not be called if get_template is overridden.
          """
@@ -758,7 +760,7 @@ diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/dj
  
          # If the list is a queryset, we'll invent a template name based on the
          # app and model name. This name gets put at the end of the template
-@@ -134,7 +148,11 @@
+@@ -135,7 +147,11 @@
          # generated ones.
          if hasattr(self.object_list, 'model'):
              opts = self.object_list.model._meta
@@ -771,9 +773,9 @@ diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/dj
  
          return names
  
-diff -Naur --exclude='*.pyc' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/simple.py cbv/views/simple.py
---- ../django-trunk/django/views/generic/simple.py	2010-11-12 11:05:17.000000000 +0100
-+++ cbv/views/simple.py	2010-12-14 00:07:21.959547002 +0100
+diff -Naur --exclude='*.pyc' --exclude='*.py?*' --exclude='*.swp' --exclude=.svn ../django-trunk/django/views/generic/simple.py cbv/views/simple.py
+--- ../django-trunk/django/views/generic/simple.py	2010-12-15 18:13:37.241174595 +0100
++++ cbv/views/simple.py	2011-01-16 16:35:58.581126868 +0100
 @@ -1,17 +1,21 @@
 +import logging
 +import warnings

@@ -1,3 +1,4 @@
+import re
 from cbv.views.base import TemplateResponseMixin, View
 from django.core.exceptions import ImproperlyConfigured
 from django.core.paginator import Paginator, InvalidPage
@@ -38,23 +39,20 @@ class MultipleObjectMixin(object):
             page_size,
             allow_empty_first_page=self.get_allow_empty()
             )
-        if paginator.num_pages > 1:
-            page = self.kwargs.get('page') or self.request.GET.get('page') or 1
-            try:
-                page_number = int(page)
-            except ValueError:
-                if page == 'last':
-                    page_number = paginator.num_pages
-                else:
-                    raise Http404("Page is not 'last', nor can it be converted "
-                                  "to an int.")
-            try:
-                page = paginator.page(page_number)
-                return (paginator, page, page.object_list, True)
-            except InvalidPage:
-                raise Http404(u'Invalid page (%s)' % page_number)
-        else:
-            return (None, None, queryset, False)
+        page = self.kwargs.get('page') or self.request.GET.get('page') or 1
+        try:
+            page_number = int(page)
+        except ValueError:
+            if page == 'last':
+                page_number = paginator.num_pages
+            else:
+                raise Http404("Page is not 'last', nor can it be converted "
+                              "to an int.")
+        try:
+            page = paginator.page(page_number)
+            return (paginator, page, page.object_list, True)
+        except InvalidPage:
+            raise Http404(u'Invalid page (%s)' % page_number)
 
     def get_paginate_by(self, queryset):
         """
@@ -88,7 +86,8 @@ class MultipleObjectMixin(object):
         if self.context_object_name:
             return self.context_object_name
         elif hasattr(object_list, 'model'):
-            return smart_str(object_list.model._meta.verbose_name_plural)
+            return smart_str(re.sub('[^a-zA-Z0-9]+', '_',
+                    object_list.model._meta.verbose_name_plural.lower()))
         else:
             return None
 
