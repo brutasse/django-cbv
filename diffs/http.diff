@@ -1,5 +1,5 @@
---- ../django-trunk/django/template/response.py	2010-12-14 10:13:07.719272001 +0100
-+++ cbv/http.py	2010-12-14 00:07:21.949552002 +0100
+--- ../django-trunk/django/template/response.py	2011-01-16 16:32:57.733627271 +0100
++++ cbv/http.py	2011-01-16 16:35:29.831127140 +0100
 @@ -1,22 +1,23 @@
  from django.http import HttpResponse
  from django.template import loader, Context, RequestContext

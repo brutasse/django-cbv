@@ -12,7 +12,7 @@ fp.close()
 
 setup(
     name='django-cbv',
-    version='0.1.3',
+    version='0.1.4',
     url='https://github.com/sorl/django-cbv',
     license='BSD',
     author='Mikko Hellsing',
