@@ -169,6 +169,7 @@ class BaseCreateView(ModelFormMixin, ProcessFormView):
     def put(self, *args, **kwargs):
         return self.post(*args, **kwargs)
 
+
 class CreateView(SingleObjectTemplateResponseMixin, BaseCreateView):
     """
     View for creating an new object instance,
@@ -227,12 +228,14 @@ class DeletionMixin(object):
             raise ImproperlyConfigured(
                 "No URL to redirect to. Provide a success_url.")
 
+
 class BaseDeleteView(DeletionMixin, BaseDetailView):
     """
     Base view for deleting an object.
 
     Using this base class requires subclassing to provide a response mixin.
     """
+
 
 class DeleteView(SingleObjectTemplateResponseMixin, BaseDeleteView):
     """

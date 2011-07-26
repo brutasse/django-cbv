@@ -16,4 +16,3 @@ class NullHandler(logging.Handler):
         pass
 
 logging.getLogger('cbv').addHandler(NullHandler())
-

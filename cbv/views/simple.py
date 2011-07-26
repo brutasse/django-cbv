@@ -20,7 +20,8 @@ def direct_to_template(request, template, extra_context=None, mimetype=None,
     Render a given template with any extra URL parameters in the context as
     ``{{ params }}``.
     """
-    if extra_context is None: extra_context = {}
+    if extra_context is None:
+        extra_context = {}
     dictionary = {'params': kwargs}
     for key, value in extra_context.items():
         if callable(value):
@@ -31,6 +32,7 @@ def direct_to_template(request, template, extra_context=None, mimetype=None,
     t = loader.get_template(template)
     return HttpResponse(t.render(c), mimetype=mimetype)
 
+
 def redirect_to(request, url, permanent=True, query_string=False, **kwargs):
     """
     Redirect to a given URL.
@@ -40,7 +42,8 @@ def redirect_to(request, url, permanent=True, query_string=False, **kwargs):
     ``/foo/<id>/`` to ``/bar/<id>/``, you could use the following URLconf::
 
         urlpatterns = patterns('',
-            ('^foo/(?P<id>\d+)/$', 'django.views.generic.simple.redirect_to', {'url' : '/bar/%(id)s/'}),
+            ('^foo/(?P<id>\d+)/$', 'django.views.generic.simple.redirect_to',
+             {'url' : '/bar/%(id)s/'}),
         )
 
     If the given url is ``None``, a HttpResponseGone (410) will be issued.

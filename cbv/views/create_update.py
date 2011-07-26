@@ -27,6 +27,7 @@ def apply_extra_context(extra_context, context):
         else:
             context[key] = value
 
+
 def get_model_and_form_class(model, form_class):
     """
     Returns a model and form class based on the model and form_class
@@ -44,6 +45,7 @@ def get_model_and_form_class(model, form_class):
         tmp_model = model
         # TODO: we should be able to construct a ModelForm without creating
         # and passing in a temporary inner class.
+
         class Meta:
             model = tmp_model
         class_name = model.__name__ + 'Form'
@@ -52,6 +54,7 @@ def get_model_and_form_class(model, form_class):
         return model, form_class
     raise GenericViewError("Generic view must be called with either a model or"
                            " form_class argument.")
+
 
 def redirect(post_save_redirect, obj):
     """
@@ -77,6 +80,7 @@ def redirect(post_save_redirect, obj):
             " parameter to the generic view or define a get_absolute_url"
             " method on the Model.")
 
+
 def lookup_object(model, object_id, slug, slug_field):
     """
     Return the ``model`` object with the passed ``object_id``.  If
@@ -99,6 +103,7 @@ def lookup_object(model, object_id, slug, slug_field):
         raise Http404("No %s found for %s"
                       % (model._meta.verbose_name, lookup_kwargs))
 
+
 def create_object(request, model=None, template_name=None,
         template_loader=loader, extra_context=None, post_save_redirect=None,
         login_required=False, context_processors=None, form_class=None):
@@ -110,7 +115,8 @@ def create_object(request, model=None, template_name=None,
         form
             the form for the object
     """
-    if extra_context is None: extra_context = {}
+    if extra_context is None:
+        extra_context = {}
     if login_required and not request.user.is_authenticated():
         return redirect_to_login(request.path)
 
@@ -140,6 +146,7 @@ def create_object(request, model=None, template_name=None,
     apply_extra_context(extra_context, c)
     return HttpResponse(t.render(c))
 
+
 def update_object(request, model=None, object_id=None, slug=None,
         slug_field='slug', template_name=None, template_loader=loader,
         extra_context=None, post_save_redirect=None, login_required=False,
@@ -155,7 +162,8 @@ def update_object(request, model=None, object_id=None, slug=None,
         object
             the original object being edited
     """
-    if extra_context is None: extra_context = {}
+    if extra_context is None:
+        extra_context = {}
     if login_required and not request.user.is_authenticated():
         return redirect_to_login(request.path)
 
@@ -189,6 +197,7 @@ def update_object(request, model=None, object_id=None, slug=None,
                       getattr(obj, obj._meta.pk.attname))
     return response
 
+
 def delete_object(request, model, post_delete_redirect, object_id=None,
         slug=None, slug_field='slug', template_name=None,
         template_loader=loader, extra_context=None, login_required=False,
@@ -205,7 +214,8 @@ def delete_object(request, model, post_delete_redirect, object_id=None,
         object
             the original object being deleted
     """
-    if extra_context is None: extra_context = {}
+    if extra_context is None:
+        extra_context = {}
     if login_required and not request.user.is_authenticated():
         return redirect_to_login(request.path)
 

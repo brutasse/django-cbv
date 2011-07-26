@@ -26,8 +26,8 @@ class MultipleObjectMixin(object):
         elif self.model is not None:
             queryset = self.model._default_manager.all()
         else:
-            raise ImproperlyConfigured(u"'%s' must define 'queryset' or 'model'"
-                                       % self.__class__.__name__)
+            raise ImproperlyConfigured(u"'%s' must define 'queryset' or "
+                                       "'model'" % self.__class__.__name__)
         return queryset
 
     def paginate_queryset(self, queryset, page_size):
@@ -130,6 +130,7 @@ class BaseListView(MultipleObjectMixin, View):
         context = self.get_context_data(object_list=self.object_list)
         return self.render_to_response(context)
 
+
 class MultipleObjectTemplateResponseMixin(TemplateResponseMixin):
     template_name_suffix = '_list'
 
@@ -154,6 +155,7 @@ class MultipleObjectTemplateResponseMixin(TemplateResponseMixin):
                 ))
 
         return names
+
 
 class ListView(MultipleObjectTemplateResponseMixin, BaseListView):
     """

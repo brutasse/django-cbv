@@ -1,10 +1,10 @@
 import logging
-from cbv.http import TemplateResponse
-from django.core.exceptions import ImproperlyConfigured
-from django import http
-from django.template import RequestContext, loader
-from django.utils.functional import update_wrapper
 
+from cbv.http import TemplateResponse
+
+from django import http
+from django.core.exceptions import ImproperlyConfigured
+from django.utils.functional import update_wrapper
 
 logger = logging.getLogger('cbv')
 
@@ -23,7 +23,8 @@ class View(object):
     dispatch-by-method and simple sanity checking.
     """
 
-    http_method_names = ['get', 'post', 'put', 'delete', 'head', 'options', 'trace']
+    http_method_names = ['get', 'post', 'put', 'delete', 'head',
+                         'options', 'trace']
 
     def __init__(self, **kwargs):
         """
@@ -43,8 +44,8 @@ class View(object):
         # sanitize keyword arguments
         for key in initkwargs:
             if key in cls.http_method_names:
-                raise TypeError(u"You tried to pass in the %s method name as a "
-                                u"keyword argument to %s(). Don't do that."
+                raise TypeError(u"You tried to pass in the %s method name as "
+                                u"a keyword argument to %s(). Don't do that."
                                 % (key, cls.__name__))
             if not hasattr(cls, key):
                 raise TypeError(u"%s() received an invalid keyword %r" % (
@@ -77,7 +78,8 @@ class View(object):
         return handler(request, *args, **kwargs)
 
     def http_method_not_allowed(self, request, *args, **kwargs):
-        allowed_methods = [m for m in self.http_method_names if hasattr(self, m)]
+        allowed_methods = [m for m in self.http_method_names
+                           if hasattr(self, m)]
         logger.warning(
             'Method Not Allowed (%s): %s' % (request.method, request.path),
             extra={
@@ -103,16 +105,17 @@ class TemplateResponseMixin(object):
         Returns a response with a template rendered with the given context.
         """
         return self.response_class(
-            request = self.request,
-            template = self.get_template_names(),
-            context = context,
+            request=self.request,
+            template=self.get_template_names(),
+            context=context,
             **response_kwargs
         )
 
     def get_template_names(self):
         """
-        Returns a list of template names to be used for the request. Must return
-        a list. May not be called if render_to_response is overridden.
+        Returns a list of template names to be used for the request.
+        Must return a list. May not be called if render_to_response is
+        overridden.
         """
         if self.template_name is None:
             raise ImproperlyConfigured(

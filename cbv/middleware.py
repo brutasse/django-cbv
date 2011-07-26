@@ -17,14 +17,13 @@ class DeferredRenderingMiddleware(object):
             urlconf = settings.ROOT_URLCONF
             urlresolvers.set_urlconf(urlconf)
             resolver = urlresolvers.RegexURLResolver(r'^/', urlconf)
-            receivers = signals.got_request_exception.send(
+            signals.got_request_exception.send(
                 sender=self.__class__,
                 request=request,
-                )
+            )
             handler = BaseHandler()
             return handler.handle_uncaught_exception(
                 request,
                 resolver,
                 sys.exc_info(),
-                )
-
+            )
