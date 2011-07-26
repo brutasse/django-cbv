@@ -1,16 +1,24 @@
 Django Class Based Views
 ========================
 
-This is Django Class Based Views taken from Django trunk. Replace all the
-references from ``django.views.generic`` to ``cbv`` in the documentation.
-All views are available directly from ``cbv`` module, for example::
+This is Django Class Based Views taken from Django trunk.
 
-    from cbv import View, TemplateView
+Use CBVs like this::
+
+    import cbv as generic
+
+Then write your class-based views as expained in the `Django documentation`_::
+
+    class SomeView(generic.TemplateView):
+        template_name = 'some_template.html'
+
+.. _Django documentation: http://docs.djangoproject.com/en/dev/topics/class-based-views
 
 You will need the following middleware installed::
 
     cbv.middleware.DeferredRenderingMiddleware
 
+Once you're ready to use Django 1.3, you'll only need to switch the import
+statement to::
 
-`Django Class Based Views Docs <http://docs.djangoproject.com/en/dev/topics/class-based-views/>`_
-
+    from django.views import generic
