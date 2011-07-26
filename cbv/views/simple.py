@@ -60,9 +60,9 @@ def redirect_to(request, url, permanent=True, query_string=False, **kwargs):
         url = "%s?%s" % (url, args)
 
     if url is not None:
-        if permanent:
-            return HttpResponsePermanentRedirect(url % kwargs)
-        return HttpResponseRedirect(url % kwargs)
+        klass = (permanent and HttpResponsePermanentRedirect or
+                 HttpResponseRedirect)
+        return klass(url % kwargs)
     else:
         logger.warning(
             'Gone: %s' % request.path,

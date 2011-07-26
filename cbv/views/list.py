@@ -38,7 +38,7 @@ class MultipleObjectMixin(object):
             queryset,
             page_size,
             allow_empty_first_page=self.get_allow_empty()
-            )
+        )
         page = self.kwargs.get('page') or self.request.GET.get('page') or 1
         try:
             page_number = int(page)
@@ -70,7 +70,7 @@ class MultipleObjectMixin(object):
             per_page,
             orphans=orphans,
             allow_empty_first_page=allow_empty_first_page
-            )
+        )
 
     def get_allow_empty(self):
         """
@@ -86,8 +86,8 @@ class MultipleObjectMixin(object):
         if self.context_object_name:
             return self.context_object_name
         elif hasattr(object_list, 'model'):
-            return smart_str(re.sub('[^a-zA-Z0-9]+', '_',
-                    object_list.model._meta.verbose_name_plural.lower()))
+            name = object_list.model._meta.verbose_name_plural.lower()
+            return smart_str('%s_list' % name)
         else:
             return None
 
@@ -97,9 +97,11 @@ class MultipleObjectMixin(object):
         """
         queryset = kwargs.pop('object_list')
         page_size = self.get_paginate_by(queryset)
+        context_object_name = self.get_context_object_name(queryset)
         if page_size:
-            paginator, page, queryset, is_paginated = \
-                self.paginate_queryset(queryset, page_size)
+            (paginator, page,
+             queryset, is_paginated) = self.paginate_queryset(queryset,
+                                                              page_size)
             context = {
                 'paginator': paginator,
                 'page_obj': page,
@@ -114,7 +116,6 @@ class MultipleObjectMixin(object):
                 'object_list': queryset
             }
         context.update(kwargs)
-        context_object_name = self.get_context_object_name(queryset)
         if context_object_name is not None:
             context[context_object_name] = queryset
         return context
@@ -125,8 +126,10 @@ class BaseListView(MultipleObjectMixin, View):
         self.object_list = self.get_queryset()
         allow_empty = self.get_allow_empty()
         if not allow_empty and len(self.object_list) == 0:
-            raise Http404(u"Empty list and '%s.allow_empty' is False."
-                          % self.__class__.__name__)
+            raise Http404(_(u"Empty list and '%(class_name)s.allow_empty' "
+                            u"is False.") % {
+                                'class_name': self.__class__.__name__,
+                            })
         context = self.get_context_data(object_list=self.object_list)
         return self.render_to_response(context)
 
@@ -139,8 +142,13 @@ class MultipleObjectTemplateResponseMixin(TemplateResponseMixin):
         Return a list of template names to be used for the request. Must return
         a list. May not be called if get_template is overridden.
         """
-        sup = super(MultipleObjectTemplateResponseMixin, self)
-        names = sup.get_template_names()
+        try:
+            names = super(MultipleObjectTemplateResponseMixin,
+                          self).get_template_names()
+        except ImproperlyConfigured:
+            # If template_name isn't specified, it's not a problem --
+            # we just start with an empty list.
+            names = []
 
         # If the list is a queryset, we'll invent a template name based on the
         # app and model name. This name gets put at the end of the template
@@ -152,7 +160,7 @@ class MultipleObjectTemplateResponseMixin(TemplateResponseMixin):
                 opts.app_label,
                 opts.object_name.lower(),
                 self.template_name_suffix
-                ))
+            ))
 
         return names
 
