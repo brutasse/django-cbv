@@ -46,9 +46,9 @@ def get_model_and_form_class(model, form_class):
         # and passing in a temporary inner class.
         class Meta:
             model = tmp_model
-        name = model.__name__ + 'Form'
+        class_name = model.__name__ + 'Form'
         attrs = {'Meta': Meta}
-        form_class = ModelFormMetaclass(name, (ModelForm,), attrs)
+        form_class = ModelFormMetaclass(class_name, (ModelForm,), attrs)
         return model, form_class
     raise GenericViewError("Generic view must be called with either a model or"
                            " form_class argument.")
@@ -132,7 +132,7 @@ def create_object(request, model=None, template_name=None,
         template_name = "%s/%s_form.html" % (
             model._meta.app_label,
             model._meta.object_name.lower()
-            )
+        )
     t = template_loader.get_template(template_name)
     c = RequestContext(request, {
         'form': form,
@@ -177,7 +177,7 @@ def update_object(request, model=None, object_id=None, slug=None,
         template_name = "%s/%s_form.html" % (
             model._meta.app_label,
             model._meta.object_name.lower()
-            )
+        )
     t = template_loader.get_template(template_name)
     c = RequestContext(request, {
         'form': form,
@@ -222,7 +222,7 @@ def delete_object(request, model, post_delete_redirect, object_id=None,
             template_name = "%s/%s_confirm_delete.html" % (
                 model._meta.app_label,
                 model._meta.object_name.lower()
-                )
+            )
         t = template_loader.get_template(template_name)
         c = RequestContext(request, {
             template_object_name: obj,

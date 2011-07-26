@@ -46,7 +46,7 @@ def archive_index(request, queryset, date_field, num_latest=15,
         template_name = "%s/%s_archive.html" % (
             model._meta.app_label,
             model._meta.object_name.lower()
-            )
+        )
     t = template_loader.get_template(template_name)
     c = RequestContext(request, {
         'date_list' : date_list,
@@ -97,7 +97,7 @@ def archive_year(request, year, queryset, date_field, template_name=None,
         template_name = "%s/%s_archive_year.html" % (
             model._meta.app_label,
             model._meta.object_name.lower()
-            )
+        )
     t = template_loader.get_template(template_name)
     c = RequestContext(request, {
         'date_list': date_list,
@@ -136,7 +136,7 @@ def archive_month(request, year, month, queryset, date_field,
         tt = time.strptime(
             "%s-%s" % (year, month),
             '%s-%s' % ('%Y', month_format)
-            )
+        )
         date = datetime.date(*tt[:3])
     except ValueError:
         raise Http404
@@ -182,7 +182,7 @@ def archive_month(request, year, month, queryset, date_field,
         template_name = "%s/%s_archive_month.html" % (
             model._meta.app_label,
             model._meta.object_name.lower()
-            )
+        )
     t = template_loader.get_template(template_name)
     c = RequestContext(request, {
         'date_list': date_list,
@@ -241,7 +241,7 @@ def archive_week(request, year, week, queryset, date_field,
         template_name = "%s/%s_archive_week.html" % (
             model._meta.app_label,
             model._meta.object_name.lower()
-            )
+        )
     t = template_loader.get_template(template_name)
     c = RequestContext(request, {
         '%s_list' % template_object_name: object_list,
@@ -288,7 +288,7 @@ def archive_day(request, year, month, day, queryset, date_field,
         date_range = (
             datetime.datetime.combine(date, datetime.time.min),
             datetime.datetime.combine(date, datetime.time.max)
-            )
+        )
         lookup_kwargs = {'%s__range' % date_field: date_range}
     else:
         lookup_kwargs = {date_field: date}
@@ -313,7 +313,7 @@ def archive_day(request, year, month, day, queryset, date_field,
         template_name = "%s/%s_archive_day.html" % (
             model._meta.app_label,
             model._meta.object_name.lower()
-            )
+        )
     t = template_loader.get_template(template_name)
     c = RequestContext(request, {
         '%s_list' % template_object_name: object_list,
@@ -368,7 +368,7 @@ def object_detail(request, year, month, day, queryset, date_field,
         date_range = (
             datetime.datetime.combine(date, datetime.time.min),
             datetime.datetime.combine(date, datetime.time.max)
-            )
+        )
         lookup_kwargs = {'%s__range' % date_field: date_range}
     else:
         lookup_kwargs = {date_field: date}
@@ -392,7 +392,7 @@ def object_detail(request, year, month, day, queryset, date_field,
         template_name = "%s/%s_detail.html" % (
             model._meta.app_label,
             model._meta.object_name.lower()
-            )
+        )
     if template_name_field:
         template_name_list = [getattr(obj, template_name_field), template_name]
         t = template_loader.select_template(template_name_list)
