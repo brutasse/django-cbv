@@ -87,6 +87,9 @@ class View(object):
         )
         return http.HttpResponseNotAllowed(allowed_methods)
 
+    def head(self, *args, **kwargs):
+        return self.get(*args, **kwargs)
+
 
 class TemplateResponseMixin(object):
     """
