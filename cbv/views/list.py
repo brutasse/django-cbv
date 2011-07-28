@@ -1,9 +1,9 @@
-import re
 from cbv.views.base import TemplateResponseMixin, View
 from django.core.exceptions import ImproperlyConfigured
 from django.core.paginator import Paginator, InvalidPage
 from django.http import Http404
 from django.utils.encoding import smart_str
+from django.utils.translation import ugettext as _
 
 
 class MultipleObjectMixin(object):
