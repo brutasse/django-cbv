@@ -1,4 +1,6 @@
 import logging
+
+from cbv.views import base, edit, list, detail, dates
 from cbv.views.base import View, TemplateView, RedirectView
 from cbv.views.dates import *
 from cbv.views.detail import DetailView
