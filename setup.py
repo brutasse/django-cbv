@@ -3,12 +3,12 @@ from setuptools import setup, find_packages
 
 setup(
     name='django-cbv',
-    version='0.1.5',
-    description='Django Class Based Views',
+    version='0.2',
+    description='Django class-based views, backported from Django trunk',
     long_description=open('README.rst').read(),
-    author='Mikko Hellsing',
-    author_email='mikko@aino.se',
-    url='https://github.com/sorl/django-cbv',
+    author='Bruno Renie',
+    author_email='buburno@gmail.com',
+    url='https://github.com/brutasse/django-cbv',
     license='BSD',
     platforms='any',
     packages=find_packages(),
@@ -25,4 +25,3 @@ setup(
         'Framework :: Django',
     ],
 )
-
